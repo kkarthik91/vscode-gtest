@@ -1,93 +1,135 @@
 #include <string>
 using namespace std;
-
-//interface for Timer Service
-clas ITimerService{
+//interface used for abstraction
+class ITimerService {
 public:
-    virtual string getTimer() = 0;
+	virtual string getTime() = 0;
+};
+class ILightController {
+public: 
+	//Expectation
+	virtual void on() = 0;
+	virtual void off() = 0;
+
 };
 
-//interface for Light controller
-class ILightController{
+class IOpertingSystemService {
 public:
-    //Expectation
-    virtual void On() = 0;
-    virtual void Off() = 0;
+	virtual void updateTime() = 0;
 };
 
-//interface for RTOS
-class IOperatingSysteService{
+class ILightHardware {
 public:
-    virtual void updateTime() = 0;
+	virtual void open() = 0;
+	virtual void close() = 0;
+};
+class H3OHardware:ILightHardware{
+public:
+	 void open() {}
+	 void close() {}
 };
 
-//interface for hardware
-class ILightHardwareSupport{
+class RTOS :public IOpertingSystemService{
 public:
-    virtual void open() = 0;
-    virtual void close() = 0;
-};
-
-//Hardware implements hardware support
-class H3OHardware: public ILightHardwareSupport{
-public:
-    void open();
-    void close();
-};
-
-//RTOS implements interface
-class RTOS:public IOperatingSysteService{
-public:
-    void updateTime() {
-        
-    }
+	void updateTime(){}
 };
 
 //TimerService implements interface
-class TimerService:public ITimerService{
-private:
-    IOperatingSysteService* rtosObj;
+class TimerService:public ITimerService
+ {
+ private:
+	IOpertingSystemService* rtosObj;
 public:
-  string getTime() {return "";};
+	string getTime() { rtosObj->updateTime(); return ""; }
+	TimerService(IOpertingSystemService* rtosArg):rtosObj(rtosArg){}
 };
-
 class LightController:public ILightController{
 private:
-    H3OHardware hardwareObj;
+	ILightHardware* hardwareObj;
 public:
-  void On(){}
-  void Off(){}
+	LightController(ILightHardware* hwArg): hardwareObj(hwArg){}
+	void on(){}
+	void off() {}
 };
 
 class LightSchedular{
 private:
-    ITimerService* _timerObj;
-    ILightController* _lightControlrObj;
+	ITimerService* _timerObj;
+	ILightController* _controllerObj;
 public:
-  void remoteSchedule(){}
-  void wakeup(){}
-void tunerSchedularOn() {}
+	LightSchedular(ITimerService* timerArg,ILightController* controllerArg):
+		_timerObj(timerArg), _controllerObj(controllerArg){}
+	 void removeSchdule(){
+		 this->_controllerObj->off();
+	 }
+	 void wakeup(){
+		 this->_timerObj->getTime();
+	 }
+	 void turnSchedularOn() {
+		 this->_controllerObj->on();
+	 }
+
+
+};
+
+/*
+class Vehicle{
+
+};
+class StartupMotor {};
+class FuelPump{};
+class Engine {
+private :
+	FuelPump fuelPumpObj;
+	StartupMotor motorObj;
+public:
+	void crankEngine(){
+	   //Delegate -interact 
+	}
+};
+//parent-child (iheritance)
+class Car :public Vehicle {
+	Engine engObj;
+public:
+	void start() {
+		engObj.crankEngine();
+	}
+
 };
 
 
-clase Engine{};
-class Car {
-    Engine* engine Ptr;
+class Engine {};
+class IVehicle {
 public:
-    //Constructor Engine
-    Car(Eangine* engineArg): enginePtr(engineArg)){
-        
-    }
-    void drive(){
-        
-    }
+	virtual void drive() = 0;
 };
-    
+class Car:public IVehicle{
+	Engine* enginePtr;
+public:
+	//Constructor Engine
+	Car(Engine* engineArg): enginePtr(engineArg) {
 
-class Person{
-public:
-    //Dependency Incjection
-    void commute(Car* vehiclePtr){
-        //star using car
-    }
+	 }
+	void drive() {
+
+	}
+
 };
+class Person {
+public:
+	//Dependency Injection (Method Injection)
+	void commute(IVehicle* vehiclePtr) {
+		 //start using car
+		vehiclePtr->drive();
+	}
+
+};
+
+int main() {
+	Engine engObj;
+	Car carObj(&engObj);
+	Person personObj;
+	personObj.commute(&carObj);
+
+}
+*/
